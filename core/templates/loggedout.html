@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <title>{{title}} logged out</title>
+    <!-- Required meta tags -->
+      <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/signin.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/sticky-footer-navbar.css" rel="stylesheet">
+
+  </head>
+  <body>
+<body>
+
+    <div class="container">
+
+
+        <form class="form-signin" action="/loginform">
+        <h2 class="form-signin-heading">Logged out from {{title}}</h2><br>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Log back in</button>
+          </form>
+
+    </div>
+
+    <footer class="footer">
+      <div class="container-fluid">
+          <div class="row">
+            <div class="col-lg-12 text-center text-muted">{{title}}</div>
+          </div>
+      </div>
+    </footer>
+
+    <!-- jQuery first, then Tether, then Bootstrap JS. -->
+    <script src="/static/jquery/jquery.js"></script>
+    <script src="/static/tether/js/tether.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+
+  </body>
+</html>
