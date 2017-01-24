@@ -54,7 +54,7 @@ def do_login(username=None, password=None):
     cherrypy.session[SESSION_KEY] = cherrypy.request.login = username
     return True
 
-def do_logout(self):
+def do_logout():
     sess = cherrypy.session
     username = sess.get(SESSION_KEY, None)
     sess[SESSION_KEY] = None

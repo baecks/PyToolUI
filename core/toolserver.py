@@ -2,7 +2,7 @@ import cherrypy
 import os
 from jinja2 import Environment, FileSystemLoader
 from internal.security import require, do_login, do_logout
-from ..tools.tools import ToolGroup
+from tools.tools import ToolGroup
 
 class ToolServerData(object):
     def __init__(self):

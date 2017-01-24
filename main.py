@@ -1,5 +1,5 @@
-from pyserver.tools.tools import Tool, ToolGroup
-from pyserver.core.toolserver import ToolServer
+from tools.tools import Tool, ToolGroup
+from core.toolserver import ToolServer
 
 b = Tool('Tool 1')
 g = ToolGroup('Group T')
