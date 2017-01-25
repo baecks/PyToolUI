@@ -1,0 +1,23 @@
+<h2>{{dashboard.name}}</h2>
+<p class="text-muted">{{dashboard.description}}</p>
+<br>
+<form>
+    {% for m in dashboard.mapping %}
+        {% if m.control is equalto 'text' %}
+    <div class="form-group">
+        <label for="control{{loop.index}}">{{m.name|title}}</label>
+        <input type="{{m.control}}" name="{{m.name}}" class="form-control" id="control{{loop.index}}" aria-describedby="control{{loop.index}}help" placeholder="{{ m.get_commit_value() }}">
+        <small id="control{{loop.index}}help" class="form-text text-muted">{{m.description}}</small>
+    </div>
+        {% elif m.control is equalto 'checkbox' %}
+    <div class="form-check">
+        <label class="form-check-label">
+            <input type="checkbox" class="form-check-input" aria-describedby="control{{loop.index}}_check_help"
+                   name="{{m.name}}" value="{{m.check_value}}" {% if m.checked() %} checked{% endif %}>&nbsp;{{m.name|title}}
+        </label>
+        <small id="control{{loop.index}}_check_help" class="form-text text-muted">{{m.description}}</small>
+    </div>
+        {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

@@ -1,0 +1,22 @@
+<h2>{{dashboard.name}}</h2>
+<p>{{dashboard.description}}</p>
+<table class="table table-hover ">
+  <thead class="thead-default">
+    <tr>
+      <th>#</th>
+      {% for m in dashboard.mapping %}
+      <th>{{m.name}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in dashboard.rows %}
+    <tr>
+      <td scope="row">{{loop.index}}</td>
+      {% for c in dashboard.mapping %}
+      <td>{{ c.get_commit_value(r) }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

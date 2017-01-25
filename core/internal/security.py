@@ -61,5 +61,5 @@ def do_logout():
     if username:
         cherrypy.request.login = None
 
-#Adds tools.auth to the CherryPy config
+#Adds dashboards.auth to the CherryPy config
 cherrypy.tools.auth = cherrypy.Tool('before_handler', check_auth)
