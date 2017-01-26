@@ -25,5 +25,6 @@ nameProperty = DashboardPropertyString(data, "Name", "The full name of the perso
 ageProperty = DashboardPropertyInt(data, "Age", "Age of the person", prop="v")
 f.addTextControl(nameProperty)
 f.addCheckboxControl(ageProperty, 41, 0)
+f.addRadioControl(ageProperty, (41,42,43), ("age 41", "age 42", "age 43"))
 
 DashboardServer('Dashboard Tester')

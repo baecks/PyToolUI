@@ -3,21 +3,41 @@
 <br>
 <form>
     {% for m in dashboard.mapping %}
-        {% if m.control is equalto 'text' %}
-    <div class="form-group">
-        <label for="control{{loop.index}}">{{m.name|title}}</label>
-        <input type="{{m.control}}" name="{{m.name}}" class="form-control" id="control{{loop.index}}" aria-describedby="control{{loop.index}}help" placeholder="{{ m.get_commit_value() }}">
-        <small id="control{{loop.index}}help" class="form-text text-muted">{{m.description}}</small>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" data-toggle="tooltip" data-placement="right" title="{{m.description}}">{{m.name|title}}</label>
+        <div class="col-sm-10">
+
+            {% if m.control is equalto 'text' %}
+            <input type="{{m.control}}" name="{{m.name}}" class="form-control" value="{{ m.get_commit_value() }}">
+
+            {% elif m.control is equalto 'checkbox' %}
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="{{m.name}}" value="{{m.check_value}}"
+                           {% if m.checked() %} checked{% endif %}>
+                </label>
+                <!--<small id="control{{loop.index}}_check_help" class="form-text text-muted">{{m.description}}</small>-->
+            </div>
+
+            {% elif m.control is equalto 'radio' %}
+            <fieldset class="form-group">
+                {% for option in m.options %}
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="radio" class="form-check-input" name="{{m.name}}" value="{{option.value}}"
+                               {% if m.checked(option) %} checked{% endif %}>&nbsp;{{option.label|title}}
+                    </label>
+                </div>
+                {% endfor %}
+            </fieldset>
+
+            {% endif %}
+
+        </div>
     </div>
-        {% elif m.control is equalto 'checkbox' %}
-    <div class="form-check">
-        <label class="form-check-label">
-            <input type="checkbox" class="form-check-input" aria-describedby="control{{loop.index}}_check_help"
-                   name="{{m.name}}" value="{{m.check_value}}" {% if m.checked() %} checked{% endif %}>&nbsp;{{m.name|title}}
-        </label>
-        <small id="control{{loop.index}}_check_help" class="form-text text-muted">{{m.description}}</small>
-    </div>
-        {% endif %}
     {% endfor %}
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+    <script>
+        $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+    </script>
