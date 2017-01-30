@@ -8,7 +8,10 @@
         <div class="col-sm-10">
 
             {% if m.control is equalto 'text' %}
-            <input type="{{m.control}}" name="{{m.name}}" class="form-control" value="{{ m.get_commit_value() }}">
+            <input type="text" name="{{m.name}}" class="form-control" value="{{ m.get_commit_value() }}">
+
+            {% elif m.control is equalto 'password' %}
+            <input type="password" name="{{m.name}}" class="form-control">
 
             {% elif m.control is equalto 'checkbox' %}
             <div class="form-check">
@@ -38,6 +41,3 @@
     {% endfor %}
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
-    <script>
-        $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-    </script>

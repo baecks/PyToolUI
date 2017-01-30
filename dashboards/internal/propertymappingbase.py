@@ -1,123 +1,114 @@
-import inspect
+import copy, keyword, re
+import threading
+import cherrypy
 
-class DashboardPropertyMapperBase(object):
-    def __init__(self, name, description, to_string, from_string, obj=None, prop=None, getter=None, setter=None, read_only=True):
-        self.name = name
-        if (self.name == None) or (len(self.name) < 1):
-            raise Exception("Invalid property name!")
+# _objects_by_ref = {}
+# _ref_by_object = {}
+#
+# def _add_object(o):
+#     global _objects_by_ref, _ref_by_object
+#     ref = "obj_%d" % len(_objects_by_ref)+1
+#     _objects_by_ref[ref] = o
+#     _ref_by_object[o] = ref
+#
+#     return ref
+#
+# def _reset_object_references():
+#     global _objects_by_ref, _ref_by_object
+#     _objects_by_ref = []
+#     _ref_by_object = []
+#
+# def _get_object_by_ref(ref):
+#     global _objects_by_ref
+#     return _objects_by_ref[ref]
+#
+# def _get_object_by_ref(o):
+#     global _ref_by_object
+#     return _ref_by_object[o]
 
-        self.obj = obj
+
+#TODO: Clean-up of this administration still to be implemented!
+class DashboardPropertyBase(object):
+    _id2obj_lock = threading.RLock()
+    _id2obj_global_dict = {}
+
+    @staticmethod
+    def _remember(obj):
+        oid = id(obj)
+        DashboardPropertyBase._id2obj_lock.acquire()
+        DashboardPropertyBase._id2obj_global_dict[oid] = obj
+        DashboardPropertyBase._id2obj_lock.release()
+        return oid
+
+    @staticmethod
+    def _id2obj(oid):
+        DashboardPropertyBase._id2obj_lock.acquire()
+        obj = DashboardPropertyBase._id2obj_global_dict[int(oid)]
+        DashboardPropertyBase._id2obj_lock.release()
+        return obj
+
+    @staticmethod
+    def getPropertyById(oid):
+        return DashboardPropertyBase._id2obj(oid)
+
+    def __init__(self, property_name, label = None, description = None, obj = None):
+        """
+
+        Args:
+            property_name: This is the name of the property.
+            label:
+            description:
+            obj:
+        """
+        self.oid = DashboardPropertyBase._remember(self)
+        self.uid = self.oid
+
+        self.property_name = property_name
+        self.is_valid_python_attribute_name(self.property_name)
+
+        self.bound_object = obj
+        self.label = label
+        if (self.label == None):
+            self.label = self.property_name.replace("_", " ").capitalize()
+        elif (len(self.label) < 1):
+            raise Exception("Invalid property label!")
+        label_pattern = r'[^\a-zA-Z0-9 ]' # letters, digits and space
+        if re.search(label_pattern, self.label):
+            raise Exception("Property label \"%s\" contains illegal characters!" % self.label)
 
         self.description = description
-        if (self.description == None) or (len(self.description) < 5):
-            raise Exception("Invalid property description!")
 
-        self.getter = getter
-        self.setter = setter
-        self.prop = prop
+    def is_valid_python_attribute_name(self, n):
+        if (n == None):
+            raise Exception("No name specified!")
+        if (keyword.iskeyword(n)):
+            raise Exception("Name %s is a keyword!" % n)
+        if (n in dir(__builtins__)):
+            raise Exception("Name %s is a built-in!" % n)
+        if (len(n) < 1):
+            raise Exception("A name should at least be 1 character!")
+        name_pattern = r'[^\a-zA-Z0-9_]'
+        if re.search(name_pattern, n):
+            raise Exception("Name \"%s\" contains illegal characters!" % n)
 
-        if (self.prop != None):
-            self.getter = None
-            self.setter = None
-            self.read_only = read_only
-        else:
-            if (self.getter == None):
-                raise Exception("If no property is specified, at least a getter method is required!")
-            self.read_only = (self.setter == None)
+    def is_bound(self):
+        return self.bound_object != None
 
-        self.to_string = to_string
-        self.from_string = from_string
+    def check_bound(self):
+        if not self.is_bound():
+            raise("The property is unbound!")
 
-        if (self.to_string == None):
-            raise Exception ("No to_string converter!")
-        if not inspect.isfunction(self.to_string):
-            raise Exception ("Method to_string \"%s\" is not a function!" % self.to_string)
+    def bind(self, o):
+        if(o == None):
+            raise Exception("Can't bind to a 'None' object!")
 
-        if (self.from_string == None):
-            raise Exception ("No from_string converter!")
-        if not inspect.isfunction(self.from_string):
-            raise Exception ("Method from_string \"%s\" is not a function!" % self.from_string)
+        if self.is_bound():
+            raise Exception("This property is already bound!")
 
-        self.commit_values={}
-
-    def get_commit_value(self, obj = None):
-        o = self.obj or obj
-
-        try:
-            return self.commit_values[o]
-        except:
-            return self.get_value(o)
-
-    def get_commit_value_as_string(self, obj = None):
-        o = self.obj or obj
-
-        val = self.get_commit_value(o)
-        return self.to_string(val)
-
-    def set_commit_value(self, val, obj = None):
-        o = self.obj or obj
-
-        self.commit_values[o] = val
-
-    def set_commit_value_from_string(self, str_val, obj = None):
-        o = self.obj or obj
-
-        val = self.from_string(str_val)
-        self.set_commit_values(val, o)
+        bound_prop = copy.copy(self)
+        bound_prop.bound_object = o
+        return bound_prop
 
     def commit(self, if_different=True):
-        for k, v in self.commit_values.iteritems():
-            if if_different and (self.get_value(k) == v):
-                continue
-            self.set_value(k, v)
+        raise Exception("Method \"commit\" is not implemented!")
 
-    def reset(self):
-        self.commit_values = {}
-
-    def get_value(self, obj=None):
-        o = self.obj or obj
-        if self.prop != None:
-            return getattr(o, self.prop)
-
-        mt = getattr(o, self.getter)
-        return mt()
-
-    def get_value_as_string(self, obj=None):
-        o = self.obj or obj
-        return self.to_string(self.get_value(o))
-
-    def set_value(self, val, obj=None):
-        o = self.obj or obj
-
-        if self.is_read_only():
-            raise("Property is read-only!")
-
-        if self.prop != None:
-            setattr(o, self.prop, val)
-            return
-
-        mt = getattr(o, self.setter)
-        mt(val)
-
-    def set_value_from_string(self, strval, obj=None):
-        o = self.obj or obj
-
-        val = self.from_string(strval)
-        self.set_value(val, o)
-
-    def is_read_only(self):
-        return self.read_only
-
-
-class DashboardPropertyMapper(DashboardPropertyMapperBase):
-    def __init__(self, name, description, to_string, from_string, prop=None, getter=None, setter=None, read_only=True):
-        super(DashboardPropertyMapper, self).__init__(name, description, to_string, from_string,
-                                                      prop=prop, getter=getter, setter=setter, read_only=read_only)
-
-
-class DashboardProperty(DashboardPropertyMapperBase):
-    def __init__(self, obj, name, description, to_string, from_string, prop=None, getter=None, setter=None, read_only=True):
-        super(DashboardProperty, self).__init__(name, description, to_string, from_string, obj=obj,
-                                                prop=prop, getter=getter, setter=setter, read_only=read_only)
-        if self.obj == None:
-            raise Exception ("No object!")

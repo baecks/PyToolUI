@@ -1,22 +1,29 @@
-<h2>{{dashboard.name}}</h2>
+<h2>{{dashboard.title}}</h2>
 <p>{{dashboard.description}}</p>
 <table class="table table-hover ">
-  <thead class="thead-default">
+    <thead class="thead-default">
     <tr>
-      <th>#</th>
-      {% for m in dashboard.mapping %}
-      <th>{{m.name}}</th>
-      {% endfor %}
+        <th>#</th>
+        {% for m in rows.elems %}
+        <th>{{m.label}}</th>
+        {% endfor %}
     </tr>
-  </thead>
-  <tbody>
-  {% for r in dashboard.rows %}
+    </thead>
+    <tbody>
+    {% for r in dashboard.rows %}
     <tr>
-      <td scope="row">{{loop.index}}</td>
-      {% for c in dashboard.mapping %}
-      <td>{{ c.get_commit_value(r) }}</td>
-      {% endfor %}
+        <td scope="row">
+            {% if dashboard.editable %}
+            <button class="btn btn-primary" onclick="load_dashboard('{{dashboard.editor.name}}');"
+                    data-toggle="tooltip" data-placement="right" data-container="body" title="Press to edit this row">{{loop.index}}</button>
+            {% else %}
+            {{loop.index}}
+            {% endif %}
+        </td>
+        {% for c in dashboard.mapping %}
+        <td>{{ c.get_commit_value(r) }}</td>
+        {% endfor %}
     </tr>
     {% endfor %}
-  </tbody>
+    </tbody>
 </table>

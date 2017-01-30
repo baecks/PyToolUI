@@ -1,38 +1,20 @@
 from internal.dashboardbase import DashboardBase
 
-class DashboardGroup(DashboardBase):
-    _dashboards_and_groups = []
-    _dashboards_by_name = {}
+class DashboardGroup(object):
+    def __init__(self, title):
+        self.title = title
+        self.dashboards_and_groups = []
 
-    def __init__(self, name):
-        super(DashboardGroup, self).__init__(name, None)
-        DashboardGroup.addDashboard(self)
-        self.dashboards = []
+    def add(self, dashboard):
+        if dashboard == None:
+            raise Exception("No dashboard or group provided!")
 
-    @staticmethod
-    def addDashboard(dashboard, group=None):
-        if group != None:
-            group.dashboards.append(dashboard)
-        else:
-            DashboardGroup._dashboards_and_groups.append(dashboard)
+        if not isinstance(dashboard, DashboardBase) and not isinstance(dashboard, DashboardGroup):
+            raise Exception("No valid dashboard or group provided!")
 
-        if not isinstance(dashboard, DashboardGroup):
-            # it's a dashboard
-            DashboardGroup._dashboards_by_name[dashboard.name] = dashboard
-
-    @staticmethod
-    def getDashboardHierarchy():
-        return DashboardGroup._dashboards_and_groups
-
-    @staticmethod
-    def findDashboardByName(name):
-        try:
-            return DashboardGroup._dashboards_by_name[name]
-        except:
-            return None
+        self.dashboards_and_groups.append(dashboard)
 
 class Dashboard(DashboardBase):
-    def __init__(self, name, template, group = None, mapping=None):
-        super(Dashboard,self).__init__(name, template, group, mapping)
-        DashboardGroup.addDashboard(self, group)
+    def __init__(self, title, **kwargs):
+        super(Dashboard,self).__init__(title, **kwargs)
 

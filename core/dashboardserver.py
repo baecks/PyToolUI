@@ -2,7 +2,7 @@ import cherrypy
 import os
 from jinja2 import Environment, FileSystemLoader
 from internal.security import require, do_login, do_logout
-from dashboards.dashboards import DashboardGroup
+from dashboards.dashboards import Dashboard
 
 class DashboardServerData(object):
     def __init__(self):
@@ -13,15 +13,17 @@ class DashboardServerData(object):
         return cherrypy.request.login
 
 class DashboardServer(object):
-    def __init__(self, title, authentication = None):
+    def __init__(self, title, dashboards, authentication = None):
         dr = os.path.dirname(os.path.realpath(__file__))
         st_dir = os.path.join(dr, "static")
+
+        self.dashboards = dashboards
 
         #JINJA2 environment for template loading
         self.env = Environment(loader=FileSystemLoader(os.path.join(dr, "templates")))
 
         #JINJA2 template data
-        self.tmlp_data = {'title' : title, 'dashboards' : DashboardGroup.getDashboardHierarchy(), 'data' : DashboardServerData()}
+        self.tmlp_data = {'title' : title, 'dashboards' : self.dashboards, 'data' : DashboardServerData()}
 
         main_cfg = {'tools.sessions.on': True, 'tools.auth.on': True}
         static_cfg = {"tools.staticdir.on" : True, "tools.staticdir.dir" : st_dir}
@@ -30,6 +32,7 @@ class DashboardServer(object):
         cherrypy.loginform = "/loginform"
 
         cherrypy.quickstart(self, '/', dashboard_server_config)
+
 
     @require()
     @cherrypy.expose
@@ -66,43 +69,40 @@ class DashboardServer(object):
             print ("Error: Failed to load the template file (%s)!\n" % str(e))
             raise Exception("ERROR rendering page: %s" % str(e))
 
-    def _dashboard_processing(self, dashboardname, reset, **kwargs):
-        dashboard = DashboardGroup.findDashboardByName(dashboardname)
-        if dashboard == None:
-            raise ("Invalid dashboard: %s" % dashboardname)
-
-        render_data = {'dashboard' : dashboard}
-
-        if reset == True:
-            try:
-                dashboard.reset()
-            except Exception as e:
-                render_data['error'] = "Reset failed (%s)" % str(e)
-        else:
-            if cherrypy.request.method.lower() == 'post':
-                try:
-                    dashboard.setParameters(kwargs)
-                except Exception as e:
-                    render_data['error'] = "Failed to set the parameter values (%s)" % str(e)
-                try:
-                    dashboard.validate()
-                except Exception as e:
-                    render_data['error'] = "Validation failed (%s)" % str(e)
-
-                try:
-                    dashboard.commit()
-                except Exception:
-                    render_data['error'] = "Commit failed (%s)" % str(e)
-
-            return self.processTemplate(dashboard.getTemplate(), render_data)
+    # def _dashboard_processing(self, dashboardname, reset, **kwargs):
+    #     dashboard = DashboardGroup.findDashboardByName(dashboardname)
+    #     if dashboard == None:
+    #         raise ("Invalid dashboard: %s" % dashboardname)
+    #
+    #     render_data = {'dashboard' : dashboard}
+    #
+    #     if reset == True:
+    #         try:
+    #             dashboard.reset()
+    #         except Exception as e:
+    #             render_data['error'] = "Reset failed (%s)" % str(e)
+    #     else:
+    #         if cherrypy.request.method.lower() == 'post':
+    #             try:
+    #                 dashboard.setParameters(kwargs)
+    #             except Exception as e:
+    #                 render_data['error'] = "Failed to set the parameter values (%s)" % str(e)
+    #             try:
+    #                 dashboard.validate()
+    #             except Exception as e:
+    #                 render_data['error'] = "Validation failed (%s)" % str(e)
+    #
+    #             try:
+    #                 dashboard.commit()
+    #             except Exception:
+    #                 render_data['error'] = "Commit failed (%s)" % str(e)
+    #
+    #         return self.processTemplate(dashboard.getTemplate(), render_data)
 
 
     @cherrypy.expose()
     def dashboard(self, dashboardname, **kwargs):
-        return self._dashboard_processing(dashboardname, False, **kwargs)
-
-    @cherrypy.expose()
-    def dashboardreset(self, dashboardname):
-        return self._dashboard_processing(dashboardname, True)
+        tmpl, data = Dashboard.load_from_request_data(cherrypy.request, dashboardname, **kwargs)
+        return self.processTemplate(tmpl, data)
 
 

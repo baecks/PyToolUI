@@ -1,61 +1,132 @@
-from propertymappingbase import DashboardPropertyMapperBase, DashboardProperty
+from propertymappingbase import DashboardPropertyBase
+import importlib
+import threading
+
+PROPERTY_PARAM_SUFFIX = "___REF_ID"
+VALUE_PARAM_PREFIX = "PROP___"
+DASHBOARD_INSTANCE_PREFIX = "DASHBOARD___"
 
 class DashboardBase(object):
-    def __init__(self, name, template, group = None, mapping=None):
-        self.name = name
-        self.group = group
-        self.template = template
-        self.mapping = []
-        self.mapping_by_name = {}
-        if mapping != None:
-            for m in mapping:
-                self.addMapping(m)
+    _id2obj_lock = threading.RLock()
+    _id2obj_global_dict = {}
 
-        self.instance = None
+    @staticmethod
+    def _remember(obj):
+        oid = id(obj)
+        DashboardBase._id2obj_lock.acquire()
+        DashboardBase._id2obj_global_dict[oid] = obj
+        DashboardBase._id2obj_lock.release()
+        return oid
 
-    def setInstanceObject(self, o):
-        self.instance = o
+    @staticmethod
+    def _id2obj(oid):
+        DashboardBase._id2obj_lock.acquire()
+        obj = DashboardBase._id2obj_global_dict[int(oid)]
+        DashboardBase._id2obj_lock.release()
+        return obj
 
-    def addMapping(self, m):
-        if m == None:
-            raise Exception("No mapping provided!")
+    @staticmethod
+    def getDashboardById(oid):
+        return DashboardBase._id2obj(oid)
 
-        try:
-            if not isinstance(m, DashboardPropertyMapperBase):
-                raise Exception ("Invalid mapping objects provided!")
-            self.mapping_by_name[m.name] = m
-            self.mapping.append(m)
-        except:
-            raise Exception("An invalid mapping list was provided!")
+    @staticmethod
+    def _instance(dashboard_class, title=None, **kwargs):
+        parts = dashboard_class.split('.')
+        module_name = ".".join(parts[:-1])
+        mod = importlib.import_module(module_name)
+        cls = getattr(mod, parts[-1])
+        return cls(title, kwargs)
 
-
-    def setParameters(self, params):
-        for k, v in params.iteritems():
+    @staticmethod
+    def load_from_request_data(request, dashboard_name, **kwargs):
+        global PROPERTY_PARAM_SUFFIX, VALUE_PARAM_PREFIX, DASHBOARD_INSTANCE_PREFIX
+        # Check if the dashboard being requested is an instance or a new one to be created
+        if dashboard_name.startswith(DASHBOARD_INSTANCE_PREFIX):
             try:
-                mapping = self.mapping_by_name[k]
+                dashboard_id = dashboard_name[len(DASHBOARD_INSTANCE_PREFIX):]
+                dashboard_instance = DashboardBase.getDashboardById(dashboard_id)
             except:
-                raise("Invalid mapping \"%s\"!" % k)
+                raise Exception("Failed to obtain the dashboard instance %s!" % dashboard_name)
 
+            return dashboard_instance.get_render_data()
+
+        # Process the arguments sent over from the client
+        prop_params = [x for x in kwargs.keys() if x.endswith(PROPERTY_PARAM_SUFFIX)]
+        instance_parameters = {}
+        for prop in prop_params:
+            prop_name = prop[:-len(PROPERTY_PARAM_SUFFIX)]
             try:
-                if isinstance(mapping, DashboardProperty):
-                    #it is a property (already containing a reference to the object)
-                    mapping.set_commit_value_from_string(v)
-                else:
-                    #it is a property mapping. Use the instance.
-                    mapping.set_commit_value_from_string(v, self.instance)
-            except Exception as e:
-                raise ("Failed to set the value (%s)!" % str(e))
+                value = DashboardPropertyBase.getPropertyById(kwargs[prop])
+            except:
+                raise Exception("Invalid property reference (%s)!" % prop_name)
+            instance_parameters[prop_name] = value
+
+        # Create a dashboard instance using the dashboard properties
+        try:
+            dashboard = DashboardBase._instance(dashboard_name, **instance_parameters)
+        except Exception as e:
+            raise Exception("Dashboard \"%s\" creation failed dashboard (%s)!" % (dashboard_name, str(e)))
+
+        # Set property values bases on the remaining parameters
+        request_parameters = [x for x in kwargs.keys() if x.startswith(VALUE_PARAM_PREFIX)]
+        for prop_name in request_parameters:
+            try:
+                prop = DashboardPropertyBase.getPropertyById(prop_name[len(VALUE_PARAM_PREFIX):])
+            except:
+                raise Exception("Referenced invalid property (%s)!" % prop_name)
+
+            prop.set_commit_value_from_string(kwargs[prop_name])
+
+        if request.method.lower() == 'post':
+            # Process the data that got submitted
+            dashboard.error_msg = dashboard.validate()
+            if dashboard.error_msg == None:
+                dashboard.commit()
+
+        # Render the dashboard
+        return dashboard.get_render_data()
+
+    def __init__(self, title=None, template=None, **kwargs):
+        """
+
+        Args:
+            title:
+            properties:
+        """
+
+        self.uid = DashboardBase._remember(self)
+        self.error_msg = None
+        self.commit_only_if_different = True
+        self.title = title or "Generic dashboard"
+        self.template = template or "generic_dashboard.html"
+        self.properties = {}
+        for prop_name, prop in kwargs.iteritems():
+            if not isinstance(prop, DashboardPropertyBase):
+                continue
+
+            self.properties[prop_name]=prop
+
+    def get_render_data(self):
+        data = {'dashboard' : self}
+        data.update(self.properties)
+
+        return self.template, data
 
     def validate(self):
-        pass
+        """
+
+        Returns:
+            The function should return None (= success) or a text string identifying the problem
+        """
+        return None
 
     def reset(self):
-        for m in self.mapping:
+        for m in self.properties:
             m.reset()
 
     def commit(self):
-        for m in self.mapping:
-            m.commit()
+        for m in self.properties:
+            m.commit(self.commit_only_if_different)
 
     def getTemplate(self):
         return self.template
