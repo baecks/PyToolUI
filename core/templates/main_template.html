@@ -23,14 +23,14 @@
       <a class="navbar-brand text-primary" href="#">{{title}}</a>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-          {% for d in dashboards.dashboards_and_groups %}
+          {% for d in dashboards %}
             {% if d.dashboards_and_groups %}
                 <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {{d.name}}
                 </a>
                 <div class="dropdown-menu" aria-labelledby="Preview">
-                    {% for d2 in d.dashboards_and_groups %}
+                    {% for d2 in d.get_all() %}
                        <a class="dropdown-item" href="#" onclick="load_dashboard('DASHBOARD___{{d2.uid}}');">{{d2.title}}</a>
                     {% endfor %}
                 </div>
@@ -44,7 +44,7 @@
 
         </ul>
           <form action="/logoutaction">
-            <button class="btn btn-primary my-2 my-sm-0" type="submit">Logout {{data.username}}</button>
+            <button class="btn btn-primary my-2 my-sm-0" type="submit">Logout {{user}}</button>
           </form>
       </div>
     </nav>

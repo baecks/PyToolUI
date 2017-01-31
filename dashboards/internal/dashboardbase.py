@@ -1,4 +1,4 @@
-from propertymappingbase import DashboardPropertyBase
+from .propertyproxy import BaseProxy
 import importlib
 import threading
 
@@ -56,7 +56,7 @@ class DashboardBase(object):
         for prop in prop_params:
             prop_name = prop[:-len(PROPERTY_PARAM_SUFFIX)]
             try:
-                value = DashboardPropertyBase.getPropertyById(kwargs[prop])
+                value = BaseProxy.getPropertyById(kwargs[prop])
             except:
                 raise Exception("Invalid property reference (%s)!" % prop_name)
             instance_parameters[prop_name] = value
@@ -71,7 +71,7 @@ class DashboardBase(object):
         request_parameters = [x for x in kwargs.keys() if x.startswith(VALUE_PARAM_PREFIX)]
         for prop_name in request_parameters:
             try:
-                prop = DashboardPropertyBase.getPropertyById(prop_name[len(VALUE_PARAM_PREFIX):])
+                prop = BaseProxy.getPropertyById(prop_name[len(VALUE_PARAM_PREFIX):])
             except:
                 raise Exception("Referenced invalid property (%s)!" % prop_name)
 
@@ -101,7 +101,7 @@ class DashboardBase(object):
         self.template = template or "generic_dashboard.html"
         self.properties = {}
         for prop_name, prop in kwargs.iteritems():
-            if not isinstance(prop, DashboardPropertyBase):
+            if not isinstance(prop, BaseProxy):
                 continue
 
             self.properties[prop_name]=prop
@@ -109,7 +109,6 @@ class DashboardBase(object):
     def get_render_data(self):
         data = {'dashboard' : self}
         data.update(self.properties)
-
         return self.template, data
 
     def validate(self):

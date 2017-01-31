@@ -4,13 +4,13 @@
     <thead class="thead-default">
     <tr>
         <th>#</th>
-        {% for m in rows.elems %}
-        <th>{{m.label}}</th>
+        {% for lab in rows.property_labels %}
+        <th>{{lab|title}}</th>
         {% endfor %}
     </tr>
     </thead>
     <tbody>
-    {% for r in dashboard.rows %}
+    {% for row in rows %}
     <tr>
         <td scope="row">
             {% if dashboard.editable %}
@@ -20,8 +20,8 @@
             {{loop.index}}
             {% endif %}
         </td>
-        {% for c in dashboard.mapping %}
-        <td>{{ c.get_commit_value(r) }}</td>
+        {% for c in row.properties  %}
+        <td>{{ c.value }}</td>
         {% endfor %}
     </tr>
     {% endfor %}

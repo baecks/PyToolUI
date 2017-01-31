@@ -1,7 +1,7 @@
 import cherrypy
 import os
 from jinja2 import Environment, FileSystemLoader
-from internal.security import require, do_login, do_logout
+from .internal.security import require, do_login, do_logout
 from dashboards.dashboards import Dashboard
 
 class DashboardServerData(object):
@@ -13,17 +13,17 @@ class DashboardServerData(object):
         return cherrypy.request.login
 
 class DashboardServer(object):
-    def __init__(self, title, dashboards, authentication = None):
+    def __init__(self, title, root_dashboard_group, authentication = None):
         dr = os.path.dirname(os.path.realpath(__file__))
         st_dir = os.path.join(dr, "static")
 
-        self.dashboards = dashboards
+        self.root_dashboard_group = root_dashboard_group
 
         #JINJA2 environment for template loading
         self.env = Environment(loader=FileSystemLoader(os.path.join(dr, "templates")))
 
         #JINJA2 template data
-        self.tmlp_data = {'title' : title, 'dashboards' : self.dashboards, 'data' : DashboardServerData()}
+        self.tmlp_data = {'title' : title, 'dashboards' : self.root_dashboard_group.get_all(), 'user' : self.logged_in_user}
 
         main_cfg = {'tools.sessions.on': True, 'tools.auth.on': True}
         static_cfg = {"tools.staticdir.on" : True, "tools.staticdir.dir" : st_dir}
@@ -33,6 +33,14 @@ class DashboardServer(object):
 
         cherrypy.quickstart(self, '/', dashboard_server_config)
 
+
+    def _get_logged_in_user(self):
+        try:
+            return cherrypy.request.login
+        except:
+            return "None"
+
+    logged_in_user = property(fget=_get_logged_in_user)
 
     @require()
     @cherrypy.expose
