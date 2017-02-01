@@ -111,42 +111,50 @@ class ObjectProxy(BaseProxy):
         """
         if isinstance(value, BaseProxy):
             value._set_transactional(True)
+            try:
+                self._attribute_names_ordered.append(item)
+            except:
+                pass
 
         super(BaseProxy, self).__setattr__(item, value)
 
     def __init__(self, label, description, **kwargs):
         super(ObjectProxy, self).__init__(label, description)
-        for n, v in kwargs.iteritems():
+        self._attribute_names_ordered = []
+        for n, v in kwargs.items():
             setattr(self, n, v)
 
-    def _set_transactional(self, tranactional):
+    def _get_base_proxy_attribs(self):
+        return [getattr(self, x) for x in self._attribute_names_ordered]
+
+    def _set_transactional(self, transactional):
         """
         Recursively pass on setting the transactional flag
         Args:
-            tranactional: Boolean defining if set operations should be handled transactional or not
+            transactional: Boolean defining if set operations should be handled transactional or not
 
         Returns:
             None
         """
-        attribs_to_process = [getattr(self, p) for p in dir(self) if isinstance(getattr(self, p), BaseProxy)]
+        attribs_to_process = self._get_base_proxy_attribs()
         for a in attribs_to_process:
-            attribs_to_process.set_transactional(tranactional)
+            attribs_to_process.set_transactional(transactional)
 
     def commit(self, if_different=True):
         self.validate()
 
-        attribs_to_commit = [getattr(self, p) for p in dir(self) if isinstance(getattr(self, p), BaseProxy)]
+        attribs_to_commit = self._get_base_proxy_attribs()
         for a in attribs_to_commit:
             a.commit(if_different)
         self.reset()
 
     def reset(self):
-        attribs_to_reset = [getattr(self, p) for p in dir(self) if isinstance(getattr(self, p), BaseProxy)]
+        attribs_to_reset = self._get_base_proxy_attribs()
         for a in attribs_to_reset:
             a.reset()
 
     def validate(self):
-        attribs_to_validate = [getattr(self, p) for p in dir(self) if isinstance(getattr(self, p), BaseProxy)]
+        attribs_to_validate = self._get_base_proxy_attribs()
         for a in attribs_to_validate:
             a.validate()
 
@@ -162,16 +170,16 @@ class ObjectProxy(BaseProxy):
         """
         pass
 
-    def _get_proxy_attributes(self):
-        return [getattr(self, p) for p in dir(self) if isinstance(getattr(self, p), BaseProxy)]
+    def get_property_labels(self):
+        return [x.label for x in self._get_base_proxy_attribs()]
 
     def __iter__(self):
-        return iter(self._get_proxy_attributes())
+        return iter(self._get_base_proxy_attribs())
 
-    def get_property_labels(self):
-        return [x.label for x in self._get_proxy_attributes()]
+    def __len__(self):
+        return len(self._get_base_proxy_attribs())
 
-    properties = property(fget=_get_proxy_attributes)
+#    attributes = property(fget=_get_base_proxy_attribs)
 
 class ListProxy(BaseProxy):
     def __init__(self, label, description, object_class, lst):
@@ -230,9 +238,12 @@ class ListProxy(BaseProxy):
     def __iter__(self):
         return iter(self._elements)
 
+    def __len__(self):
+        return len(self._elements)
+
     def _get_element_property_labels(self):
         if len(self._elements) == 0:
             return []
-        return self._elements.get_property_labels()
+        return self._elements[0].get_property_labels()
 
     property_labels = property(fget=_get_element_property_labels)

@@ -23,7 +23,7 @@
 
 
         <form class="form-signin" action="/loginform">
-        <h2 class="form-signin-heading">Logged out from<br>{{title}}</h2><br>
+        <h2 class="form-signin-heading">Logged out from<br>{{app_data.name}}</h2><br>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Log back in</button>
           </form>
 
@@ -32,7 +32,7 @@
     <footer class="footer">
       <div class="container-fluid">
           <div class="row">
-            <div class="col-lg-12 text-center text-muted">{{title}}</div>
+            <div class="col-lg-12 text-center text-muted">{{app_data.name}}</div>
           </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
-<h2>{{dashboard.title}}</h2>
-<p>{{dashboard.description}}</p>
+<h2>{{title}}</h2>
+<p>{{description}}</p>
 <table class="table table-hover ">
     <thead class="thead-default">
     <tr>
@@ -13,14 +13,14 @@
     {% for row in rows %}
     <tr>
         <td scope="row">
-            {% if dashboard.editable %}
-            <button class="btn btn-primary" onclick="load_dashboard('{{dashboard.editor.name}}');"
+            {% if editable %}
+            <button class="btn btn-primary" onclick="load_dashboard('dd');"
                     data-toggle="tooltip" data-placement="right" data-container="body" title="Press to edit this row">{{loop.index}}</button>
             {% else %}
             {{loop.index}}
             {% endif %}
         </td>
-        {% for c in row.properties  %}
+        {% for c in row  %}
         <td>{{ c.value }}</td>
         {% endfor %}
     </tr>

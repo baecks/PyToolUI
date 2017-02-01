@@ -1,4 +1,4 @@
-from internal.propertymappingbase import DashboardPropertyBase
+from .internal.propertymappingbase import DashboardPropertyBase
 import inspect
 import cherrypy
 
