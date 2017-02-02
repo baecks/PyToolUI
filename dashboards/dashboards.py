@@ -2,15 +2,20 @@ import importlib
 import inspect
 import os
 import threading
-
 import cherrypy
 from jinja2 import Environment, FileSystemLoader
-
 from dashboards.propertyproxy import BaseProxy, PropertyProxy
+from dashboards.helpers import get_class_from_name
+import json
+import urllib
 
 PROPERTY_PARAM_PREFIX = "PROP_REF_ID___"
 SUBMIT_PARAM_PREFIX = "SUBMIT_PROP_ID___"
 DASHBOARD_INSTANCE_PREFIX = "DASHBOARD___"
+
+URL_PARAMETER_PROP_REF_PREFIX = "PROP___"
+
+PROXIED_PREFIX = "PROXIED___"
 
 class DashboardGroup(object):
     def __init__(self, title):
@@ -29,6 +34,7 @@ class DashboardGroup(object):
     def get_all(self):
         return self._dashboards_and_groups
 
+
 class DashboardServerData(object):
     def __init__(self, app_title, dashboards):
         if app_title == None:
@@ -43,7 +49,8 @@ class DashboardServerData(object):
             raise Exception("No dashboard structure provided!")
 
         if not isinstance(dashboards, DashboardGroup):
-            raise Exception("The dashboard structure object provided is not an instance of %s!" % DashboardGroup.__name__)
+            raise Exception(
+                "The dashboard structure object provided is not an instance of %s!" % DashboardGroup.__name__)
 
         self._app_dashboards = dashboards.get_all()
 
@@ -56,6 +63,7 @@ class DashboardServerData(object):
     user = property(fget=_get_logged_in_user)
     name = property(fget=lambda self: self._app_title)
     dashboards = property(fget=lambda self: self._app_dashboards)
+
 
 # class DashboardAction(object):
 #     _REF_ID_SUFFIX = "___PROPERTY_REF"
@@ -101,6 +109,15 @@ class DashboardServerData(object):
 #     def _get_js_action(self):
 #         return ""
 
+class DashboardAction(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def execute(self):
+        return Dashboard("Generic action", "Generic action", None)
+
+    def get_url(self):
+        return ""
 
 
 class Dashboard(object):
@@ -109,7 +126,7 @@ class Dashboard(object):
 
     @staticmethod
     def _remember(obj):
-        oid = id(obj)
+        oid = str(id(obj))
         Dashboard._id2obj_lock.acquire()
         Dashboard._id2obj_global_dict[oid] = obj
         Dashboard._id2obj_lock.release()
@@ -118,7 +135,7 @@ class Dashboard(object):
     @staticmethod
     def _id2obj(oid):
         Dashboard._id2obj_lock.acquire()
-        obj = Dashboard._id2obj_global_dict[int(oid)]
+        obj = Dashboard._id2obj_global_dict[oid]
         Dashboard._id2obj_lock.release()
         return obj
 
@@ -134,7 +151,7 @@ class Dashboard(object):
         cls = getattr(mod, parts[-1])
         if issubclass(cls, Dashboard) and cls != Dashboard:
             return cls
-        raise("Class %s is not a sub-class of %s" % (dashboard_class, Dashboard.__name__))
+        raise Exception("Class %s is not a sub-class of %s" % (dashboard_class, Dashboard.__name__))
 
     @staticmethod
     def _instance_from_name(dashboard_class_name, title=None, **kwargs):
@@ -153,7 +170,7 @@ class Dashboard(object):
         try:
             dashboard_cls = Dashboard._class_object(dashboard_name)
         except:
-            raise("The dashboard %s does not exist!" % dashboard_name)
+            raise ("The dashboard %s does not exist!" % dashboard_name)
 
         # Get the __init__ signature
         try:
@@ -171,20 +188,21 @@ class Dashboard(object):
 
         # Positional arguments
         dashboard_init_positional_arguments = {}
-        dashboard_init_positional_arguments_defaults = [None]*(len(dashboard_init_sig.args)-len(dashboard_init_sig.defaults or [])) + dashboard_init_sig.defaults
+        dashboard_init_positional_arguments_defaults = [None] * (
+        len(dashboard_init_sig.args) - len(dashboard_init_sig.defaults or [])) + dashboard_init_sig.defaults
         for i in len(dashboard_init_sig.args):
             arg = dashboard_init_sig.args[i]
-            dashboard_init_positional_arguments[arg]=dashboard_init_positional_arguments_defaults[i]
+            dashboard_init_positional_arguments[arg] = dashboard_init_positional_arguments_defaults[i]
 
         # variable positional arguments
         dashboard_init_has_varargs = (dashboard_init_sig.varargs != None)
 
         # Keyword arguments
         dashboard_init_keyword_arguments = {}
-        #dashboard_init_keyword_arguments_defaults = [None]*(len(dashboard_init_sig.kwonlyargs)-len(dashboard_init_sig.defaults)) + dashboard_init_sig.defaults
+        # dashboard_init_keyword_arguments_defaults = [None]*(len(dashboard_init_sig.kwonlyargs)-len(dashboard_init_sig.defaults)) + dashboard_init_sig.defaults
         for arg in dashboard_init_sig.kwonlyargs:
             dashboard_init_keyword_arguments[arg] = None
-            dashboard_init_positional_arguments[arg]=dashboard_init_positional_arguments_defaults[i]
+            dashboard_init_positional_arguments[arg] = dashboard_init_positional_arguments_defaults[i]
 
         # Process the arguments sent over from the client
         # Proxied data is referenced by their ID. The parameters specifying proxied properties have a name starting
@@ -214,11 +232,10 @@ class Dashboard(object):
             if not isinstance(prop_obj, PropertyProxy):
                 raise Exception("The reference is not a property (%s)!" % prop)
 
-            submit_values[prop_obj]=kwargs[prop]
+            submit_values[prop_obj] = kwargs[prop]
 
         # Create the dashboard instance and pass all data
         dashboard = Dashboard._instance_from_class(dashboard_name, )
-
 
     @staticmethod
     def load_from_request_data(request, dashboard_name, **kwargs):
@@ -274,13 +291,12 @@ class Dashboard(object):
     def app_setup(app_title, dashboards):
         dr = os.path.dirname(os.path.realpath(__file__))
 
-        #JINJA2 environment for template loading
+        # JINJA2 environment for template loading
         Dashboard._env = Environment(loader=FileSystemLoader(os.path.join(dr, "templates")))
 
-        #JINJA2 template data
-        Dashboard._app_template_data = {'app_data' : DashboardServerData(app_title, dashboards)}
-
-
+        # JINJA2 template data
+        Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, dashboards),
+                                        "dashboard_action" : DashboardAction.dashboard_action }
 
     def __init__(self, title, description, template, **kwargs):
         """
@@ -300,7 +316,6 @@ class Dashboard(object):
         for prop_name, prop in kwargs.items():
             if not isinstance(prop, BaseProxy):
                 continue
-
             self.properties[prop_name] = prop
 
         self._template_variables_to_be_exposed = []
@@ -333,9 +348,126 @@ class Dashboard(object):
             data = self.get_additional_render_data()
             data.update(Dashboard._app_template_data)
             data.update(self.properties)
-            data['title']=self.title
-            data['description']=self.description
+            data['title'] = self.title
+            data['description'] = self.description
             return template.render(data)
         except Exception as e:
             raise Exception("ERROR rendering page: %s" % str(e))
 
+
+class DashboardAction(object):
+    def __init__(self, *args, **kwargs):
+        self._init_args = args
+        self._init_kwargs = kwargs
+
+    @staticmethod
+    def dashboard_action(action_cls, *args, **kwargs):
+        try:
+            cls = get_class_from_name(action_cls)
+            return cls(*args, **kwargs).js
+        except Exception as e:
+            raise Exception("Failed to create action (%s)!" % str(e))
+
+    @staticmethod
+    def _encode_proxy(v):
+        if v == None:
+            return v
+        if isinstance(v, BaseProxy):
+            return PROXIED_PREFIX + v.uid
+        return v
+
+    @staticmethod
+    def _decode_proxy(v):
+        if v == None:
+            return v
+
+        if not isinstance(v, str):
+            return v
+
+        if not v.startswith(PROXIED_PREFIX):
+            return v
+
+        return DashboardAction._get_property_by_url_id(v)
+
+    @staticmethod
+    def _get_property_by_url_id(id):
+        return BaseProxy.getPropertyById(id[len(PROXIED_PREFIX):])
+
+    def get_url(self):
+        positional_args = []
+        for arg in self._init_args:
+            positional_args.append(DashboardAction._encode_proxy(arg))
+
+        named_args = {}
+        for n, arg in self._init_kwargs.items():
+            named_args[n] = DashboardAction._encode_proxy(arg)
+
+        url_path = "dashboard_action/" + self.__module__ + "." + self.__class__.__name__ + "/"
+        try:
+            parameters = json.dumps({'args': positional_args, 'kwargs' : named_args })
+            url_path += urllib.parse.quote(parameters)
+        except Exception as e:
+            raise Exception("Failed to create the parameter URL path (%s)!" % str(e))
+        return url_path
+
+    def get_javascript(self):
+        return "action('%s');" % self.url
+
+
+    @staticmethod
+    def from_url_path(class_name, parameters, **kwargs):
+        params = urllib.parse.unquote(parameters)
+        return DashboardAction.from_url_path_no_unquote(class_name, params, **kwargs)
+
+    @staticmethod
+    def from_url_path_no_unquote(class_name, parameters, **kwargs):
+        cls = get_class_from_name(class_name)
+
+        if not issubclass(cls, DashboardAction):
+            raise Exception("Class %s is not a sub-class of %s" % (class_name, DashboardAction.__name__))
+
+        # Parse the parameters
+        try:
+            args = json.loads(parameters)
+        except Exception as e:
+            raise Exception("Failed to parse the parameters (%s)!" % str(e))
+
+        # Get the postional parameters
+        try:
+            postional_args = [DashboardAction._decode_proxy(x) for x in args['args']]
+        except:
+            raise Exception("Failed to get the positional arguments!")
+
+        # Get keyword arguments
+        try:
+            named_args = {}
+            named_args_encoded = args['kwargs']
+            for k, v in named_args_encoded.items():
+                named_args[k] = DashboardAction._decode_proxy(v)
+        except:
+            raise Exception("Failed to get the positional arguments!")
+
+        # Set the proxied properties passed as **kwargs
+        for n, v in kwargs.items():
+            try:
+                proxy_object = DashboardAction._get_property_by_url_id(n)
+                proxy_object.value = v
+            except:
+                raise Exception("Failed to find proxied property \"%s\" and set the value (%s)!" % (str(n), v))
+
+        try:
+            return cls(*postional_args, **named_args)
+        except Exception as e:
+            raise Exception("Failed to instantiate the action (%s)!" % str(e))
+
+    @staticmethod
+    def test_url_path(url):
+        parts = url.split("/")
+        o = DashboardAction.from_url_path(parts[1], parts[2])
+        return o
+
+    def execute(self):
+        return Dashboard("x", "x", None)
+
+    url = property(fget=get_url)
+    js = property(fget=get_javascript)

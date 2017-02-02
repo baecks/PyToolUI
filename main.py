@@ -2,6 +2,10 @@ from core.dashboardserver import DashboardServer
 from dashboards.dashboards import DashboardGroup
 from dashboards.propertyproxy import PropertyProxy, ObjectProxy, ListProxy
 from dashboards.simpletabledashboard import SimpleTableDashboard
+from dashboards.dashboards import DashboardAction
+
+act = DashboardAction(1,2,3,a="test",b=9.8)
+DashboardAction.test_url_path(act.url)
 
 
 #

@@ -6,7 +6,7 @@ class BaseProxy(object):
 
     @staticmethod
     def _remember(obj):
-        oid = id(obj)
+        oid = str(id(obj))
         BaseProxy._id2obj_lock.acquire()
         BaseProxy._id2obj_global_dict[oid] = obj
         BaseProxy._id2obj_lock.release()
@@ -15,7 +15,7 @@ class BaseProxy(object):
     @staticmethod
     def _id2obj(oid):
         BaseProxy._id2obj_lock.acquire()
-        obj = BaseProxy._id2obj_global_dict[int(oid)]
+        obj = BaseProxy._id2obj_global_dict[oid]
         BaseProxy._id2obj_lock.release()
         return obj
 

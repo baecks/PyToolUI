@@ -14,7 +14,7 @@
     <tr>
         <td scope="row">
             {% if editable %}
-            <button class="btn btn-primary" onclick="load_dashboard('dd');"
+            <button class="btn btn-primary" onclick="{{dashboard_action('dashboards.dashboards.DashboardAction', row)}}"
                     data-toggle="tooltip" data-placement="right" data-container="body" title="Press to edit this row">{{loop.index}}</button>
             {% else %}
             {{loop.index}}

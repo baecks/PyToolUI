@@ -16,3 +16,9 @@ function load_dashboard (dashboard) {
     $("#dashboardpane").fadeOut(750);
     $.ajax({url: "/dashboard/" + dashboard, success: render_dashboard_pane});
 }
+
+function action (url) {
+    $('[data-toggle="tooltip"]').tooltip('hide');
+    $("#dashboardpane").fadeOut(750);
+    $.ajax({url: url, success: render_dashboard_pane});
+}

@@ -1,11 +1,11 @@
 import cherrypy
 import os
 from .internal.security import require, do_login, do_logout
-from dashboards.dashboards import Dashboard
+from dashboards.dashboards import Dashboard, DashboardAction
+
 
 class DashboardServer(object):
     def __init__(self, title, root_dashboard_group, authentication = None):
-
         Dashboard.app_setup(title, root_dashboard_group)
 
         dr = os.path.dirname(os.path.realpath(__file__))
@@ -48,8 +48,8 @@ class DashboardServer(object):
         raise cherrypy.HTTPRedirect("/loggedout")
 
     @cherrypy.expose
-    def dashboardaction(self, action_class, *kwargs):
-        pass
+    def dashboard_action(self, action_class, action_params, *kwargs):
+        return DashboardAction.from_url_path_no_unquote(action_class, action_params, *kwargs).execute().render()
 
     @cherrypy.expose
     def dashboard(self, dashboard_id):
