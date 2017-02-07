@@ -1,43 +1,52 @@
-<h2>{{dashboard.name}}</h2>
-<p class="text-muted">{{dashboard.description}}</p>
-<br>
-<form>
-    {% for m in dashboard.mapping %}
+{% macro input(o) -%}
+    {% if o.list_constrained == True and not o.boolean %}
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label" data-toggle="tooltip" data-placement="right" title="{{m.description}}">{{m.name|title}}</label>
-        <div class="col-sm-10">
-
-            {% if m.control is equalto 'text' %}
-            <input type="text" name="{{m.name}}" class="form-control" value="{{ m.get_commit_value() }}">
-
-            {% elif m.control is equalto 'password' %}
-            <input type="password" name="{{m.name}}" class="form-control">
-
-            {% elif m.control is equalto 'checkbox' %}
-            <div class="form-check">
-                <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="{{m.name}}" value="{{m.check_value}}"
-                           {% if m.checked() %} checked{% endif %}>
-                </label>
-                <!--<small id="control{{loop.index}}_check_help" class="form-text text-muted">{{m.description}}</small>-->
+        <label class="col-sm-2 col-form-label" data-toggle="tooltip" data-placement="right" title="{{o.description}}">{{o.label|title}}</label>
+            <div class="col-sm-10">
+                <fieldset class="form-group">
+                    {% for e, l in o.constraint_value_dict.items() %}
+                    <div class="form-check">
+                      <label class="form-check-label">
+                        <input class="form-check-input" type="radio" name="{{o.uid}}" value="{{e}}"
+                            {% if o.value==e %} checked{% endif %}>
+                        {{l}}
+                      </label>
+                    </div>
+                    {% endfor %}
+                </fieldset>
             </div>
-
-            {% elif m.control is equalto 'radio' %}
-            <fieldset class="form-group">
-                {% for option in m.options %}
+      </div>
+    {% else %}
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" data-toggle="tooltip" data-placement="right" title="{{o.description}}">{{o.label|title}}</label>
+            <div class="col-sm-10">
+            {% if o.boolean %}
                 <div class="form-check">
                     <label class="form-check-label">
-                        <input type="radio" class="form-check-input" name="{{m.name}}" value="{{option.value}}"
-                               {% if m.checked(option) %} checked{% endif %}>&nbsp;{{option.label|title}}
+                        <input type="checkbox" class="form-check-input" name="{{o.uid}}" value="{{o.boolean_values[0]}}"
+                           {% if o.value==o.boolean_values[0] %} checked{% endif %}>
                     </label>
                 </div>
-                {% endfor %}
-            </fieldset>
-
+            {% elif o.hidden %}
+                <input class="form-control" type="password" name="{{o.uid}}" value="{{o.value}}">
+            {% else %}
+                <input class="form-control" type="text" name="{{o.uid}}" value="{{o.value}}">
             {% endif %}
-
         </div>
     </div>
+    {% endif %}
+{%- endmacro %}
+
+<h2>{{title}}</h2>
+<p class="text-muted">{{description}}</p>
+<br>
+<form id="the_form" action="{{dashboard_action_url('dashboards.formdashboard.FormDashboardSubmitAction')}}">
+    {% for o in form_object %}
+        {{ input(o) }}
     {% endfor %}
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <div class="form-group row">
+      <div class="offset-sm-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
 </form>

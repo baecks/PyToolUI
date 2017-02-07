@@ -11,33 +11,38 @@
     <!-- Custom styles for this template -->
     <link href="/static/css/general.css" rel="stylesheet">
 
-      <title>{{app_data.name}}</title>
+    <!-- Font awsome -->
+    <link rel="stylesheet" href="static/font-awesome/css/font-awesome.min.css">
+
+    <title>{{app_data.name}}</title>
+
+    <link rel="icon" href="static/css/dashboard.png">
 
   </head>
   <body>
 
-  <nav class="navbar navbar-toggleable-md fixed-top navbar-inverse bg-inverse">
-      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+  <nav class="navbar navbar-toggleable-md fixed-top bottom-border">
+      <button class="navbar-toggler navbar-toggler-right navbar-toggler-dashboard" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon navbar-toggler-icon-dashboard"></span>
       </button>
-      <a class="navbar-brand text-primary" href="#">{{app_data.name}}</a>
+      <a class="navbar-brand text-primary navbar-iconed" href="#">{{app_data.name}}</a>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
           {% for d in app_data.dashboards %}
-            {% if d.dashboards_and_groups %}
+            {% if d.group %}
                 <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                    {{d.name}}
+                    {{d.title|title}}
                 </a>
                 <div class="dropdown-menu" aria-labelledby="Preview">
                     {% for d2 in d.get_all() %}
-                       <a class="dropdown-item" href="#" onclick="load_dashboard('{{d2.uid}}');">{{d2.title}}</a>
+                       <a class="dropdown-item" href="#" onclick="load_dashboard('{{d2.uid}}');">{{d2.title|title}}</a>
                     {% endfor %}
                 </div>
                 </li>
             {% else %}
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="load_dashboard('{{d.uid}}');">{{d.title}}</a>
+                <a class="nav-link" href="#" onclick="load_dashboard('{{d.uid}}');">{{d.title|title}}</a>
             </li>
             {% endif %}
         {% endfor %}

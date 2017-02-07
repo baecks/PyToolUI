@@ -48,8 +48,8 @@ class DashboardServer(object):
         raise cherrypy.HTTPRedirect("/loggedout")
 
     @cherrypy.expose
-    def dashboard_action(self, action_class, action_params, *kwargs):
-        return DashboardAction.from_url_path_no_unquote(action_class, action_params, *kwargs).execute().render()
+    def dashboard_action(self, action_class, action_params, **kwargs):
+        return DashboardAction.from_url_path_no_unquote(action_class, action_params, **kwargs).execute().render()
 
     @cherrypy.expose
     def dashboard(self, dashboard_id):

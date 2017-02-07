@@ -21,6 +21,7 @@ class DashboardGroup(object):
     def __init__(self, title):
         self.title = title
         self._dashboards_and_groups = []
+        self.group = True
 
     def add(self, dashboard):
         if dashboard == None:
@@ -296,7 +297,8 @@ class Dashboard(object):
 
         # JINJA2 template data
         Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, dashboards),
-                                        "dashboard_action" : DashboardAction.dashboard_action }
+                                        "dashboard_action" : DashboardAction.dashboard_action,
+                                        "dashboard_action_url" : DashboardAction.dashboard_action_url}
 
     def __init__(self, title, description, template, **kwargs):
         """
@@ -360,13 +362,23 @@ class DashboardAction(object):
         self._init_args = args
         self._init_kwargs = kwargs
 
+        self._properties_commited = []
+
     @staticmethod
-    def dashboard_action(action_cls, *args, **kwargs):
+    def _get_dashboard_action_object(action_cls, *args, **kwargs):
         try:
             cls = get_class_from_name(action_cls)
-            return cls(*args, **kwargs).js
+            return cls(*args, **kwargs)
         except Exception as e:
             raise Exception("Failed to create action (%s)!" % str(e))
+
+    @staticmethod
+    def dashboard_action(action_cls, *args, **kwargs):
+        return DashboardAction._get_dashboard_action_object(action_cls, *args, **kwargs).js
+
+    @staticmethod
+    def dashboard_action_url(action_cls, *args, **kwargs):
+        return DashboardAction._get_dashboard_action_object(action_cls, *args, **kwargs).url
 
     @staticmethod
     def _encode_proxy(v):
@@ -448,17 +460,43 @@ class DashboardAction(object):
             raise Exception("Failed to get the positional arguments!")
 
         # Set the proxied properties passed as **kwargs
+        properties_commited = []
         for n, v in kwargs.items():
             try:
-                proxy_object = DashboardAction._get_property_by_url_id(n)
+                proxy_object = BaseProxy.getPropertyById(n)
                 proxy_object.value = v
+                properties_commited.append(v)
             except:
                 raise Exception("Failed to find proxied property \"%s\" and set the value (%s)!" % (str(n), v))
 
         try:
-            return cls(*postional_args, **named_args)
+            o = cls(*postional_args, **named_args)
+            o.set_properties_committed(properties_commited)
         except Exception as e:
             raise Exception("Failed to instantiate the action (%s)!" % str(e))
+
+        return o
+
+    def set_properties_committed(self, props):
+        if props == None:
+            return
+
+        if not isinstance(props, list):
+            raise Exception ("The properties should be provided as a list!")
+
+        for p in props:
+            if not isinstance(p, PropertyProxy):
+                raise Exception("The list contains a non-%s instance (%s)!" % (PropertyProxy.__name__, str(p)) )
+
+        self._properties_commited = props
+
+    def commit_properties(self):
+        for v in self._properties_commited:
+            v.commit()
+
+    def reset_properties(self):
+        for v in self._properties_commited:
+            v.reset()
 
     @staticmethod
     def test_url_path(url):
@@ -467,6 +505,7 @@ class DashboardAction(object):
         return o
 
     def execute(self):
+        self.commit_properties()
         return Dashboard("x", "x", None)
 
     url = property(fget=get_url)
