@@ -16,7 +16,7 @@ function render_dashboard_pane (data) {
         $('#dashboardpane').fadeIn('fast');
 
         // Adds a JAVASCRIPT handler for any form submit button
-        $('form').on( "submit", function( event ) {
+        $('#dashboardpane form').on( "submit", function( event ) {
             event.preventDefault();
             $.ajax({ type: "POST",
                       url: $(this).attr('action'),
