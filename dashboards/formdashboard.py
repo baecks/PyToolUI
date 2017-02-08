@@ -16,6 +16,7 @@ class RadioOptions(object):
 class FormDashboard(Dashboard):
     def __init__(self, title, description, obj):
         super(FormDashboard, self).__init__(title, description, template = "form_dashboard.html", **{'form_object':obj})
+        self._add_event('submit', FormDashboardSubmitAction)
 
         #self.controls = {}
 
@@ -28,10 +29,11 @@ class DashboardFormEditAction(DashboardAction):
         return FormDashboard("Coordinates Editor", "Allows editing coordinates", self.obj)
 
 class FormDashboardSubmitAction(DashboardAction):
-    def __init__(self, *args, **kwargs):
-        super(FormDashboardSubmitAction, self).__init__(*args, **kwargs)
+    def __init__(self, form_obj, **kwargs):
+        super(FormDashboardSubmitAction, self).__init__(form_obj, **kwargs)
+        self.form_obj = form_obj
 
     def execute(self):
         self.commit_properties()
-        return FormDashboard("Coordinates Editor - submitted", "Allows editing coordinates", self.obj)
+        return FormDashboard("Coordinates Editor - submitted", "Allows editing coordinates", self.form_obj)
 

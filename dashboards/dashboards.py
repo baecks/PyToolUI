@@ -37,7 +37,7 @@ class DashboardGroup(object):
 
 
 class DashboardServerData(object):
-    def __init__(self, app_title, dashboards):
+    def __init__(self, app_title, app_description, dashboards):
         if app_title == None:
             raise Exception("No application tile provided!")
 
@@ -45,6 +45,14 @@ class DashboardServerData(object):
             raise Exception("An application title needs to be at least 5 characters!")
 
         self._app_title = app_title
+
+        if app_description == None:
+            raise Exception("No application description provided!")
+
+        if len(app_description) < 5:
+            raise Exception("An application description needs to be at least 5 characters!")
+
+        self._app_description = app_description
 
         if dashboards == None:
             raise Exception("No dashboard structure provided!")
@@ -63,52 +71,9 @@ class DashboardServerData(object):
 
     user = property(fget=_get_logged_in_user)
     name = property(fget=lambda self: self._app_title)
+    description = property(fget=lambda self: self._app_description)
     dashboards = property(fget=lambda self: self._app_dashboards)
 
-
-# class DashboardAction(object):
-#     _REF_ID_SUFFIX = "___PROPERTY_REF"
-#
-#     @staticmethod
-#     def _class_object(action_class):
-#         parts = action_class.split('.')
-#         module_name = ".".join(parts[:-1])
-#         mod = importlib.import_module(module_name)
-#         cls = getattr(mod, parts[-1])
-#         if issubclass(cls, DashboardAction) and cls != DashboardAction:
-#             return cls
-#         raise("Class %s is not a sub-class of %s" % (action_class, DashboardAction.__name__))
-#
-#     @staticmethod
-#     def _instance_from_name(action_class_name, **kwargs):
-#         cls = DashboardAction._class_object(action_class_name)
-#         args = list(kwargs.keys())
-#         args.sort()
-#         parameter_list = []
-#         for arg in args:
-#             if arg.endswith(DashboardAction._REF_ID_SUFFIX):
-#                 # It is a proxied value
-#                 try:
-#                     parameter = BaseProxy.getPropertyById(kwargs[arg])
-#                 except:
-#                     raise("Non existing proxied parameter specified (%s)!" % arg)
-#                 parameter_list.append(parameter)
-#             else:
-#                 parameter_list.a
-#
-#     def from_url
-#     def __init__(self, *args):
-#         for arg in args:
-#             if not isinstance(arg, BaseProxy):
-#                 raise("Arguments should be instances of %s" % BaseProxy.__name__)
-#
-#         self._process_args(args)
-#
-#     def _process_args(self, args):
-#
-#
-#     def _get_js_action(self):
-#         return ""
 
 class DashboardAction(object):
     def __init__(self, *args, **kwargs):
@@ -289,16 +254,17 @@ class Dashboard(object):
         return dashboard.get_render_data()
 
     @staticmethod
-    def app_setup(app_title, dashboards):
+    def app_setup(app_title, app_description, dashboards):
         dr = os.path.dirname(os.path.realpath(__file__))
 
         # JINJA2 environment for template loading
         Dashboard._env = Environment(loader=FileSystemLoader(os.path.join(dr, "templates")))
 
         # JINJA2 template data
-        Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, dashboards),
-                                        "dashboard_action" : DashboardAction.dashboard_action,
-                                        "dashboard_action_url" : DashboardAction.dashboard_action_url}
+        Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, app_description, dashboards),
+                                        #"dashboard_action" : DashboardAction.dashboard_action,
+                                        #"dashboard_action_url" : DashboardAction.dashboard_action_url
+                                         }
 
     def __init__(self, title, description, template, **kwargs):
         """
@@ -312,7 +278,7 @@ class Dashboard(object):
         self.error_msg = None
         self.commit_only_if_different = True
         self.title = title or "Generic dashboard"
-        self.template = template or "generic_dashboard.html"
+        self.template = template or "main_dashboard.html"
         self.properties = {}
         self.description = description
         for prop_name, prop in kwargs.items():
@@ -321,6 +287,8 @@ class Dashboard(object):
             self.properties[prop_name] = prop
 
         self._template_variables_to_be_exposed = []
+
+        self._event_actions = {} # mapping event name to an action-class.
 
     def get_additional_render_data(self):
         return {}
@@ -352,9 +320,53 @@ class Dashboard(object):
             data.update(self.properties)
             data['title'] = self.title
             data['description'] = self.description
+
+            #add the event handlers
+            for ev, handler in self._event_actions.items():
+                def handler_wrap(*args, **kwargs):
+                    return DashboardAction._get_dashboard_action_object(handler.__module__ + "." + handler.__name__, *args, **kwargs)
+                data['event_%s' % ev] = handler_wrap
+
             return template.render(data)
         except Exception as e:
             raise Exception("ERROR rendering page: %s" % str(e))
+
+    def _add_event(self, event, handler_class):
+        if event == None:
+            raise Exception("No event specified!")
+        if not isinstance(event, str):
+            raise Exception("The event should be a string!")
+        event_name = event.lower()
+        if event_name in self._event_actions.keys():
+            raise Exception("The event has already been added!")
+
+        if handler_class == None:
+            raise Exception("No handler class provided!")
+        if not issubclass(handler_class, DashboardAction):
+            raise Exception("The handler class is not a subclass of %s!" % DashboardAction.__name__)
+
+        self._event_actions[event_name]=handler_class
+
+    def get_events(self):
+        return self._event_actions.keys()
+
+    def set_event_action_class(self, event, handler_class):
+        if event == None:
+            raise Exception("No event specified!")
+        if not isinstance(event, str):
+            raise Exception("The event should be a string!")
+        event_name = event.lower()
+        if not event_name in self._event_actions.keys():
+            raise Exception("The event does not exist on this dashboard!")
+
+        tpl = self._event_actions[event_name]
+
+        if handler_class == None:
+            raise Exception("No handler base class provided!")
+        if not issubclass(handler_class, DashboardAction):
+            raise Exception("The handler class is not a subclass of %s!" % DashboardAction.__name__)
+
+        self._event_actions[event_name]=handler_class
 
 
 class DashboardAction(object):
@@ -423,7 +435,7 @@ class DashboardAction(object):
         return url_path
 
     def get_javascript(self):
-        return "action('%s');" % self.url
+        return "raise_event('%s');" % self.url
 
 
     @staticmethod
@@ -465,7 +477,7 @@ class DashboardAction(object):
             try:
                 proxy_object = BaseProxy.getPropertyById(n)
                 proxy_object.value = v
-                properties_commited.append(v)
+                properties_commited.append(proxy_object)
             except:
                 raise Exception("Failed to find proxied property \"%s\" and set the value (%s)!" % (str(n), v))
 
@@ -490,7 +502,19 @@ class DashboardAction(object):
 
         self._properties_commited = props
 
+    def _validate_properties(self):
+        """
+        This function can be overridden to provide validation of the properties before commit. The function
+        should raise an error in case of a problem.
+
+        Returns:
+
+        """
+        pass
+
     def commit_properties(self):
+        self._validate_properties()
+
         for v in self._properties_commited:
             v.commit()
 
@@ -510,3 +534,4 @@ class DashboardAction(object):
 
     url = property(fget=get_url)
     js = property(fget=get_javascript)
+

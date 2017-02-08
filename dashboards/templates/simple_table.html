@@ -1,7 +1,7 @@
-<h2>{{title}}</h2>
-<p>{{description}}</p>
+{% import "tools.html" as tools with context %}
+{{ tools.dashboard_title() }}
 <table class="table table-hover">
-    <thead class="thead-default">
+    <thead class="thead-default thead-dashboard">
     <tr>
         <th>#</th>
         {% for lab in rows.property_labels %}
@@ -22,7 +22,7 @@
         <td>{{ c.value }}</td>
         {% endfor %}
         {% if editable %}
-            <td><a href="#" onclick="{{dashboard_action('dashboards.formdashboard.DashboardFormEditAction', row)}}"
+            <td><a href="#" onclick="{{event_edit(row).js}}"
                     data-toggle="tooltip" data-placement="left" data-container="body" title="Press to edit this row"><i class="fa fa-pencil"></i></a></td>
         {% endif %}
     </tr>

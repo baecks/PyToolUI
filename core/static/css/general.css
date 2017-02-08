@@ -10,6 +10,7 @@ button {
   background-size:30px 30px;
   background-position: left center;
   padding-left:45px;
+  cursor:pointer;
 }
 
 .bottom-border {
@@ -37,3 +38,21 @@ button {
 .navbar-toggler-icon-dashboard {
   background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(2,117,216,1.0)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
 }
+
+.indented-20 {
+  padding-left:20px;
+}
+
+.jumbotron-heading-image {
+  background-image:url("/static/css/dashboard.png");
+  background-repeat: no-repeat;
+  background-size:3.5rem;
+  background-position: left center;
+  padding-left:65px;
+}
+
+.padded-10 {
+    padding-left:10px;
+    padding-right:10px;
+}
+

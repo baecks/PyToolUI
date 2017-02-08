@@ -37,10 +37,10 @@
     {% endif %}
 {%- endmacro %}
 
-<h2>{{title}}</h2>
-<p class="text-muted">{{description}}</p>
+<h2 >{{title}}</h2>
+<p class="text-primary"><i class="fa fa-info-circle" aria-hidden="true"></i>&nbsp;{{description}}</p>
 <br>
-<form id="the_form" action="{{dashboard_action_url('dashboards.formdashboard.FormDashboardSubmitAction')}}">
+<form id="the_form" action="{{event_submit(form_object).url}}">
     {% for o in form_object %}
         {{ input(o) }}
     {% endfor %}

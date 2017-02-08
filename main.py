@@ -55,4 +55,4 @@ g.add(g2)
 g.add(dashboard)
 g.add(form)
 
-DashboardServer('Dashboard Tester', g)
+DashboardServer('Dashboard Tester', 'This application is available for testing and debugging the DASHBOARD UI framework.', g)

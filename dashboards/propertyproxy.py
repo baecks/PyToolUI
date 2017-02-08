@@ -121,6 +121,7 @@ class PropertyProxy(BaseProxy):
 
         if if_different:
             if (getattr(self.proxied_object, self.proxied_property) == self._commit_value):
+                self.reset()
                 return
         setattr(self.proxied_object, self.proxied_property, self._commit_value)
         self.reset()

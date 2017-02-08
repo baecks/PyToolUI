@@ -23,11 +23,17 @@
 
     <div class="container">
 
+        <div class="jumbotron jumbotron">
+          <div class="container">
+            <h1 class="display-4">You have been logged out of {{app_data.name}}</h1>
+              <hr class="my-4">
 
-        <form class="form-signin" action="/loginform">
-        <h2 class="form-signin-heading">Logged out from<br>{{app_data.name}}</h2><br>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Log back in</button>
-          </form>
+            <p class="lead">To log back in, press the button below.</p>
+            <p class="lead">
+                <a class="btn btn-primary btn-lg" href="/loginform" role="button">Log in</a>
+            </p>
+          </div>
+        </div>
 
     </div>
 

@@ -17,12 +17,12 @@ body {
   font-weight: normal;
 }
 
-.form-signin .form-signin-heading {
+.form-signin-heading {
   background-image:url("/static/css/dashboard.png");
   background-repeat: no-repeat;
-  background-size:12%;
+  background-size:3.5rem;
   background-position: left center;
-  padding-left:50px;
+  padding-left:65px;
 }
 
 .form-signin .form-control {

@@ -25,7 +25,7 @@
       <button class="navbar-toggler navbar-toggler-right navbar-toggler-dashboard" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon navbar-toggler-icon-dashboard"></span>
       </button>
-      <a class="navbar-brand text-primary navbar-iconed" href="#">{{app_data.name}}</a>
+      <a class="navbar-brand text-primary navbar-iconed" href="/index">{{app_data.name}}</a>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
           {% for d in app_data.dashboards %}
@@ -49,13 +49,17 @@
 
         </ul>
           <form action="/logoutaction">
-            <button class="btn btn-primary my-2 my-sm-0" type="submit">Logout {{app_data.user}}</button>
+            <button class="btn btn-primary my-2 my-sm-0" type="submit"
+             data-toggle="tooltip" data-placement="left" title="You are logged in as {{app_data.user}}">
+                <i class="fa fa-user-circle" aria-hidden="true"></i>&nbsp;Logout
+            </button>
           </form>
       </div>
     </nav>
 
     <!-- Begin page content -->
     <div id="dashboardpane" class="container">
+        {% include 'main_dashboard.html' %}
     </div>
 
     <!-- jQuery first, then Tether, then Bootstrap JS. -->
@@ -66,6 +70,7 @@
 
     <script src="/static/js/dashboards.js"></script>
 
+    <script>activate_tooltips();</script>
 
   </body>
 </html>
