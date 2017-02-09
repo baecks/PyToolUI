@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+      <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+
+    <!-- Datatables CSS -->
+    <link rel="stylesheet" href="/static/datatables/css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="/static/datatables/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="/static/datatables/css/jquery.dataTables.min.css">
+    <!-- Custom styles for this template -->
+    <link href="/static/css/general.css" rel="stylesheet">
+
+    <!-- Font awsome -->
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
+
+    <title>{{app_data.name}}</title>
+
+    <link rel="icon" href="/static/css/dashboard.png">
+
+  </head>
+  <body>
+
+  <!-- Modal used for confirmation of actions-->
+    <div class="modal fade" id="confirm-modal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmModalLabel">Confirm</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div id="confirmModalBody" class="modal-body">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+            <button id="confirmModalButtonYes" type="button" class="btn btn-secondary">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  <nav class="navbar navbar-toggleable-md fixed-top bottom-border">
+      <button class="navbar-toggler navbar-toggler-right navbar-toggler-dashboard" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon navbar-toggler-icon-dashboard"></span>
+      </button>
+      <a class="navbar-brand text-primary navbar-iconed" href="/index">{{app_data.name}}</a>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          {% for d in app_data.dashboards %}
+            {% if d.group %}
+                <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {{d.title|title}}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="Preview">
+                    {% for d2 in d.get_all() %}
+                       <a class="dropdown-item" href="#" onclick="load_dashboard('{{d2.uid}}');">{{d2.title|title}}</a>
+                    {% endfor %}
+                </div>
+                </li>
+            {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="load_dashboard('{{d.uid}}');">{{d.title|title}}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        </ul>
+            <button class="btn btn-primary my-2 my-sm-0" type="submit" data-toggle="modal" data-target="#confirm-modal"
+                data-confirm-title="Logout" data-confirm-question="Are you sure you want to log out?" data-confirm-action="logout();">
+                <i class="fa fa-user-circle" aria-hidden="true"></i>&nbsp;Logout&nbsp;{{app_data.user}}
+            </button>
+      </div>
+    </nav>
+
+    <!-- Begin page content -->
+    <div id="dashboardpane" class="container">
+        {% include 'main_dashboard.html' %}
+    </div>
+
+    <!-- jQuery first, then Tether, then Bootstrap JS. -->
+    <script src="/static/jquery/jquery.js"></script>
+    <script src="/static/jquery/jquery.form.js"></script>
+    <script src="/static/tether/js/tether.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+    <script src="/static/chartjs/Chart.bundle.min.js"></script>
+    <script src="/static/datatables/js/jquery.dataTables.js"></script>
+    <script src="/static/datatables/js/dataTables.bootstrap.js"></script>
+    <script src="/static/datatables/js/dataTables.bootstrap4.js"></script>
+    <script src="/static/js/dashboards.js"></script>
+
+    <script>setup_page();</script>
+
+  </body>
+</html>

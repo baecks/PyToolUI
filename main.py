@@ -1,8 +1,11 @@
-from core.dashboardserver import DashboardServer
-from dashboards.dashboards import DashboardGroup
-from dashboards.propertyproxy import PropertyProxy, ObjectProxy, ListProxy
-from dashboards.simpletabledashboard import SimpleTableDashboard
-from dashboards.formdashboard import FormDashboard
+from dashboardui.dashboard import DashboardGroup
+from dashboardui.dashboards.formdashboard import FormDashboard
+from dashboardui.dashboards.graphdashboard import GraphDashboard
+from dashboardui.dashboards.propertyproxy import PropertyProxy, ObjectProxy, ListProxy
+from dashboardui.dashboards.simpletabledashboard import SimpleTableDashboard
+from dashboardui.server.dashboardserver import DashboardServer
+
+
 #
 # act = DashboardAction(1,2,3,a="test",b=9.8)
 # DashboardAction.test_url_path(act.url)
@@ -46,6 +49,7 @@ g = DashboardGroup("Test boards")
 
 dashboard = SimpleTableDashboard("Coordinates", "Table of coordinates in the list", ttList, editable=True)
 form = FormDashboard("Coordinates Editor", "Allows editing coordinates", ttList.get_element_by_index(5))
+graph = GraphDashboard("Test bar graph", "This dashboard allows testing the bar chart.", [])
 
 g2 = DashboardGroup("Test actions")
 g2.add(dashboard)
@@ -54,5 +58,6 @@ g2.add(form)
 g.add(g2)
 g.add(dashboard)
 g.add(form)
+g.add(graph)
 
 DashboardServer('Dashboard Tester', 'This application is available for testing and debugging the DASHBOARD UI framework.', g)

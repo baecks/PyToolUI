@@ -1,0 +1,31 @@
+{% import "tools.html" as tools with context %}
+{{ tools.dashboard_title() }}
+<table id="the-table" class="display dashboard-table" cellspacing="0" width="100%">
+    <thead>
+    <tr>
+        <th>#</th>
+        {% for lab in rows.property_labels %}
+        <th>{{lab|title}}</th>
+        {% endfor %}
+        {% if editable %}
+            <th style="width:1px">Edit</th>
+        {% endif %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in rows %}
+    <tr>
+        <td scope="row">
+            {{loop.index}}
+        </td>
+        {% for c in row  %}
+        <td>{{ c.value }}</td>
+        {% endfor %}
+        {% if editable %}
+            <td><a href="#" onclick="{{event_edit(row).js}}"
+                    data-toggle="tooltip" data-placement="left" data-container="body" title="Press to edit this row"><i class="fa fa-pencil"></i></a></td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
