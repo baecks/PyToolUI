@@ -7,6 +7,10 @@ function load_loggedout_page(){
     window.location.assign("/loggedout");
 }
 
+function logout(){
+    window.location.assign("/logoutaction");
+}
+
 function render_dashboard_pane (data) {
     $('[data-toggle="tooltip"]').tooltip('hide');
     $('#navbarCollapse').collapse('hide')
@@ -41,3 +45,18 @@ function raise_event(url) {
 function load_dashboard (dashboard) {
     raise_event("/dashboard/" + dashboard)
 }
+
+function setup_page(){
+    activate_tooltips();
+    $('#confirm-modal').on('show.bs.modal', function(e) {
+        var data = $(e.relatedTarget).data();
+        $('#confirmModalLabel', this).text(data.confirmTitle);
+        $('#confirmModalBody', this).text(data.confirmQuestion);
+        var $modalDiv = $(e.delegateTarget);
+        $modalDiv.on('click', '#confirmModalButtonYes', function(e) {
+            var $modalDiv = $(e.delegateTarget);
+            $modalDiv.modal('hide');
+            eval(data.confirmAction);
+            });
+        });
+    }

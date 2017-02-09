@@ -56,3 +56,11 @@ button {
     padding-right:10px;
 }
 
+a a:hover, a:active, a:focus {
+    outline:0;
+}
+
+button {
+    outline:0;
+}
+
