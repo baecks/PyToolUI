@@ -39,7 +39,7 @@ class DashboardGroup(object):
 
 
 class DashboardServerData(object):
-    def __init__(self, app_title, app_description, dashboards):
+    def __init__(self, app_title, app_description, dashboards, authentication):
         if app_title == None:
             raise Exception("No application tile provided!")
 
@@ -64,6 +64,14 @@ class DashboardServerData(object):
                 "The dashboard structure object provided is not an instance of %s!" % DashboardGroup.__name__)
 
         self._app_dashboards = dashboards.get_all()
+
+        if authentication == None:
+            raise Exception("No authentication info provided!")
+
+        if not isinstance(authentication, bool):
+            raise Exception("Authentication should be a boolean!")
+
+        self.authentication = authentication
 
     def _get_logged_in_user(self):
         try:
@@ -256,14 +264,14 @@ class Dashboard(object):
         return dashboard.get_render_data()
 
     @staticmethod
-    def app_setup(app_title, app_description, dashboards):
+    def app_setup(app_title, app_description, dashboards, authentication):
         dr = os.path.dirname(os.path.realpath(__file__))
 
         # JINJA2 environment for template loading
         Dashboard._env = Environment(loader=FileSystemLoader(os.path.join(dr, "templates")))
 
         # JINJA2 template data
-        Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, app_description, dashboards),
+        Dashboard._app_template_data = {'app_data': DashboardServerData(app_title, app_description, dashboards, authentication),
                                         #"dashboard_action" : DashboardAction.dashboard_action,
                                         #"dashboard_action_url" : DashboardAction.dashboard_action_url
                                          }

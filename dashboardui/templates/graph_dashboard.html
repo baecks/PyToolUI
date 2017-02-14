@@ -1,7 +1,11 @@
 {% import "tools.html" as tools with context %}
 {{ tools.dashboard_title() }}
 
-<canvas id="FullPageChart" style="width:100%;height:100%"></canvas>
+<div class="container" style="height:90hv;position:absolute">
+    <div class="container" style="height:100vh">
+        <canvas id="FullPageChart"></canvas>
+    </div>
+</div>
 
 <script>
 var ctx = document.getElementById("FullPageChart");
@@ -18,6 +22,8 @@ var myChart = new Chart(ctx, {
         }]
     },
     options: {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
             yAxes: [{
                 ticks: {
@@ -27,4 +33,6 @@ var myChart = new Chart(ctx, {
         }
     }
 });
+
+//setup_graph_dashboard();
 </script>

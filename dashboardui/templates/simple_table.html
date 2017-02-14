@@ -1,6 +1,6 @@
 {% import "tools.html" as tools with context %}
 {{ tools.dashboard_title() }}
-<table id="the-table" class="display dashboard-table" cellspacing="0" width="100%">
+<table id="the-table" class="table table-striped table-bordered dt-responsive nowrap dashboard-table" cellspacing="0" width="100%">
     <thead>
     <tr>
         <th>#</th>
@@ -8,7 +8,7 @@
         <th>{{lab|title}}</th>
         {% endfor %}
         {% if editable %}
-            <th style="width:1px">Edit</th>
+            <th data-priority="1">Edit</th>
         {% endif %}
     </tr>
     </thead>
@@ -19,7 +19,17 @@
             {{loop.index}}
         </td>
         {% for c in row  %}
-        <td>{{ c.value }}</td>
+        <td>
+        {% if c.boolean %}
+            {% if c.value==c.boolean_values[0] %}
+            <i class="fa fa-check-square-o" aria-hidden="true"></i>
+            {% else %}
+            <i class="fa fa-square-o" aria-hidden="true"></i>
+            {% endif %}
+        {% else %}
+            {{ c.value }}
+        {% endif %}
+        </td>
         {% endfor %}
         {% if editable %}
             <td><a href="#" onclick="{{event_edit(row).js}}"

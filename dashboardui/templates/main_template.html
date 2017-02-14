@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
 
     <!-- Datatables CSS -->
-    <link rel="stylesheet" href="/static/datatables/css/dataTables.bootstrap.min.css">
     <link rel="stylesheet" href="/static/datatables/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="/static/datatables/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/static/datatables/responsive/css/responsive.bootstrap4.min.css">
+
     <!-- Custom styles for this template -->
     <link href="/static/css/general.css" rel="stylesheet">
 
@@ -74,15 +74,17 @@
         {% endfor %}
 
         </ul>
+          {% if app_data.authentication %}
             <button class="btn btn-primary my-2 my-sm-0" type="submit" data-toggle="modal" data-target="#confirm-modal"
                 data-confirm-title="Logout" data-confirm-question="Are you sure you want to log out?" data-confirm-action="logout();">
                 <i class="fa fa-user-circle" aria-hidden="true"></i>&nbsp;Logout&nbsp;{{app_data.user}}
             </button>
+          {% endif %}
       </div>
     </nav>
 
     <!-- Begin page content -->
-    <div id="dashboardpane" class="container">
+    <div id="dashboardpane" class="container main-dashboard">
         {% include 'main_dashboard.html' %}
     </div>
 
@@ -93,8 +95,10 @@
     <script src="/static/bootstrap/js/bootstrap.js"></script>
     <script src="/static/chartjs/Chart.bundle.min.js"></script>
     <script src="/static/datatables/js/jquery.dataTables.js"></script>
-    <script src="/static/datatables/js/dataTables.bootstrap.js"></script>
+    <!--<script src="/server_static_files/datatables/js/dataTables.bootstrap.js"></script>-->
     <script src="/static/datatables/js/dataTables.bootstrap4.js"></script>
+    <script src="/static/datatables/responsive/js/dataTables.responsive.js"></script>
+    <script src="/static/datatables/responsive/js/responsive.bootstrap4.js"></script>
     <script src="/static/js/dashboards.js"></script>
 
     <script>setup_page();</script>

@@ -2,8 +2,9 @@ from dashboardui.dashboard import DashboardGroup
 from dashboardui.dashboards.formdashboard import FormDashboard
 from dashboardui.dashboards.graphdashboard import GraphDashboard
 from dashboardui.dashboards.propertyproxy import PropertyProxy, ObjectProxy, ListProxy
-from dashboardui.dashboards.simpletabledashboard import SimpleTableDashboard
-from dashboardui.server.dashboardserver import DashboardServer
+from dashboardui.dashboards.tabledashboard import TableDashboard
+from dashboardui.server import DashboardServer, CsvDashboardServerAuthenticator
+import os
 
 
 #
@@ -30,7 +31,7 @@ class tt(object):
         self.y = j
         self.active = True
 
-lst = [tt(i+1,(i+1)*5) for i in range(50)]
+lst = [tt(i+1,(i+1)*5) for i in range(500)]
 
 class ttProxy(ObjectProxy):
     def __init__(self, obj):
@@ -47,7 +48,7 @@ el = ttList.get_element_by_index(0)
 
 g = DashboardGroup("Test boards")
 
-dashboard = SimpleTableDashboard("Coordinates", "Table of coordinates in the list", ttList, editable=True)
+dashboard = TableDashboard("Coordinates", "Table of coordinates in the list", ttList, editable=True)
 form = FormDashboard("Coordinates Editor", "Allows editing coordinates", ttList.get_element_by_index(5))
 graph = GraphDashboard("Test bar graph", "This dashboard allows testing the bar chart.", [])
 
@@ -60,4 +61,6 @@ g.add(dashboard)
 g.add(form)
 g.add(graph)
 
-DashboardServer('Dashboard Tester', 'This application is available for testing and debugging the DASHBOARD UI framework.', g)
+auth = CsvDashboardServerAuthenticator("./test_users.csv")
+
+DashboardServer('Dashboard Tester', 'This application is available for testing and debugging the DASHBOARD UI framework.', g, auth)
